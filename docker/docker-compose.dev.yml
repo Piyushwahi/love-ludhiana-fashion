@@ -1,0 +1,77 @@
+# ============================================
+# Love Ludhiana Fashion — Docker Compose (Development)
+# Hot reload, debug mode, volume mounts
+# ============================================
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  backend:
+    build:
+      target: development
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app
+      - /app/.venv  # Exclude venv from mount
+      - backend_logs:/app/logs
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/love_ludhiana
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=DEBUG
+      - LOG_FORMAT=console
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir /app/app
+      --log-level debug
+
+  frontend:
+    build:
+      target: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules  # Exclude node_modules from mount
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8000
+    command: npm run dev -- --host 0.0.0.0
+
+  # ── pgAdmin (Development Only) ────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: llf-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@loveludhianafashion.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - llf-network
+
+  # ── Redis Commander (Development Only) ────
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: llf-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - llf-network
+
+volumes:
+  backend_logs:
+    name: llf-backend-logs

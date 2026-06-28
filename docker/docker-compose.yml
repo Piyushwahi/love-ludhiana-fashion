@@ -1,0 +1,86 @@
+# ============================================
+# Love Ludhiana Fashion — Docker Compose (Base)
+# Shared configuration for all environments
+# ============================================
+
+services:
+  # ── PostgreSQL Database ────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: llf-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: love_ludhiana
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d love_ludhiana"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - llf-network
+
+  # ── Redis ──────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: llf-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - llf-network
+
+  # ── Backend (FastAPI) ──────────────────────
+  backend:
+    container_name: llf-backend
+    build:
+      context: ../backend
+      dockerfile: ../docker/backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - llf-network
+
+  # ── Frontend (React) ──────────────────────
+  frontend:
+    container_name: llf-frontend
+    build:
+      context: ../frontend
+      dockerfile: ../docker/frontend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - llf-network
+
+# ── Volumes ──────────────────────────────────
+volumes:
+  postgres_data:
+    name: llf-postgres-data
+  redis_data:
+    name: llf-redis-data
+
+# ── Networks ─────────────────────────────────
+networks:
+  llf-network:
+    name: llf-network
+    driver: bridge

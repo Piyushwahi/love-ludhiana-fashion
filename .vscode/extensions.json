@@ -1,0 +1,24 @@
+{
+  "recommendations": [
+    // Python
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.black-formatter",
+    "charliermarsh.ruff",
+
+    // Frontend (JS/TS/CSS/JSON)
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+
+    // DevOps / Docker / Git
+    "ms-azuretools.vscode-docker",
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // Utility
+    "redhat.vscode-yaml",
+    "bierner.markdown-mermaid",
+    "editorconfig.editorconfig"
+  ]
+}

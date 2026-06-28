@@ -1,0 +1,226 @@
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "love-ludhiana-fashion-backend"
+version = "0.1.0"
+description = "Love Ludhiana Fashion — Enterprise E-Commerce Backend"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Love Ludhiana Fashion", email = "dev@loveludhianafashion.com"},
+]
+
+dependencies = [
+    # Web Framework
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+
+    # Database
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+
+    # Validation & Settings
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "email-validator>=2.2.0",
+
+    # Security (architecture ready)
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.18",
+
+    # HTTP Client
+    "httpx>=0.28.0",
+
+    # Redis (prepared, not implemented)
+    "redis[hiredis]>=5.2.0",
+
+    # Cloudinary (prepared)
+    "cloudinary>=1.41.0",
+
+    # Utilities
+    "python-dotenv>=1.0.1",
+    "orjson>=3.10.0",
+    "python-slugify>=8.0.4",
+
+    # Logging
+    "structlog>=24.4.0",
+
+    # Monitoring (prepared)
+    "sentry-sdk[fastapi]>=2.19.0",
+    "prometheus-fastapi-instrumentator>=7.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "factory-boy>=3.3.0",
+    "faker>=33.0.0",
+
+    # Linting & Formatting
+    "ruff>=0.8.0",
+    "black>=24.10.0",
+    "isort>=5.13.0",
+    "mypy>=1.13.0",
+
+    # Pre-commit
+    "pre-commit>=4.0.0",
+
+    # Type stubs
+    "types-redis>=4.6.0",
+    "types-python-slugify>=8.0.0",
+    "sqlalchemy[mypy]>=2.0.36",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+# ──────────────────────────────────────────────
+# Black
+# ──────────────────────────────────────────────
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+
+# ──────────────────────────────────────────────
+# isort
+# ──────────────────────────────────────────────
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+known_first_party = ["app"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+# ──────────────────────────────────────────────
+# Ruff
+# ──────────────────────────────────────────────
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+fix = true
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "S",    # flake8-bandit (security)
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "DTZ",  # flake8-datetimez
+    "T20",  # flake8-print
+    "RET",  # flake8-return
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "ARG",  # flake8-unused-arguments
+    "PTH",  # flake8-use-pathlib
+    "ERA",  # eradicate (commented-out code)
+    "RUF",  # Ruff-specific rules
+]
+ignore = [
+    "S101",   # assert used (needed for tests)
+    "B008",   # function call in default arg (FastAPI Depends)
+    "ARG001", # unused function argument (FastAPI deps)
+    "ERA001", # commented-out code (we use stubs/explanations in placeholder files)
+    "S104",   # bind to all interfaces (0.0.0.0 used for development/containers)
+    "S105",   # possible hardcoded password (dummy secrets in env defaults)
+    "S106",   # possible hardcoded password (dummy secrets in env defaults)
+    "S107",   # possible hardcoded password (dummy secrets in env defaults)
+    "N818",   # exception names (AppException is preferred over AppError)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ARG001", "ARG002"]
+"migrations/**/*.py" = ["ERA001"]
+
+# ──────────────────────────────────────────────
+# MyPy
+# ──────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = [
+    "cloudinary.*",
+    "passlib.*",
+    "python_slugify.*",
+]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+# ──────────────────────────────────────────────
+# pytest
+# ──────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["*/tests/*", "*/migrations/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.",
+    "raise NotImplementedError",
+    "pass",
+    "\\.\\.\\.",
+]
